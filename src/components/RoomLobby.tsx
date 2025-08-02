@@ -111,7 +111,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
               <div className="text-2xl font-mono font-bold text-center bg-white p-3 rounded border mb-2 tracking-wider">
                 {roomId}
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center">
                   <Badge variant={isHost ? "default" : "secondary"}>
                     {isHost ? "房主" : "客人"}
@@ -124,6 +124,12 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                   )}
                 </div>
               </div>
+              {isHost && connectionStatus === 'disconnected' && (
+                <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
+                  <div className="font-semibold mb-1">⚠️ 测试提示:</div>
+                  <div>朋友需要用不同浏览器或设备输入房间号加入</div>
+                </div>
+              )}
             </div>
           )}
 
@@ -183,13 +189,16 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
             </div>
           )}
 
-          {connectionStatus === 'connected' && isHost && (
+          {/* Host can start game after creating room, whether connected or not */}
+          {isHost && roomId && connectionStatus !== 'connecting' && connectionStatus !== 'error' && (
             <div className="space-y-2">
               <Button onClick={onStartGame} className="w-full" variant="default">
                 开始游戏
               </Button>
               <p className="text-xs text-gray-500 text-center">
-                等待对方准备，点击开始游戏
+                {connectionStatus === 'connected' 
+                  ? '双方已连接，点击开始游戏' 
+                  : '可以先开始游戏，等待朋友加入'}
               </p>
             </div>
           )}
@@ -208,9 +217,16 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
           {connectionStatus === 'error' && (
             <div className="space-y-2">
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600 text-center">
-                  连接失败，请检查房间ID或网络连接
+                <p className="text-sm text-red-600 text-center font-semibold mb-2">
+                  连接失败
                 </p>
+                <div className="text-xs text-red-600 space-y-1">
+                  <p>• 请检查房间号是否正确</p>
+                  <p>• 如果在同一浏览器测试，请使用:</p>
+                  <p className="ml-2">- 不同浏览器 (Chrome + Firefox)</p>
+                  <p className="ml-2">- 隐私/无痕模式</p>
+                  <p className="ml-2">- 不同设备</p>
+                </div>
               </div>
               <Button onClick={onDisconnect} className="w-full" variant="outline">
                 重新开始

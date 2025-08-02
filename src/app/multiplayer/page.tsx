@@ -98,8 +98,8 @@ export default function MultiplayerPage() {
     setGameStarted(false);
   }, []);
 
-  // Show room lobby if not connected or game not started
-  if (!isConnected || !gameStarted) {
+  // Show room lobby if no room created/joined OR game not started
+  if (!roomId || !gameStarted) {
     return (
       <RoomLobby
         peerId={peerId}
