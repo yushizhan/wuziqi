@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 五子棋 (Gomoku) 游戏
 
-## Getting Started
+一个精美的五子棋单机游戏，使用 Next.js、shadcn/ui 和 Tailwind CSS 构建。
 
-First, run the development server:
+## 游戏特色
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- 🎯 经典五子棋玩法，支持黑白双方对战
+- 🎨 精美的 UI 设计，响应式布局
+- 🎮 智能胜负检测，支持横、竖、斜方向
+- ↶ 悔棋功能，可撤销上一步操作
+- 🔄 随时重新开始游戏
+- 📱 完美支持桌面和移动设备
+
+## 游戏规则
+
+1. **黑子先手** - 游戏开始时由黑子先下
+2. **轮流下棋** - 玩家轮流在棋盘上放置棋子
+3. **五子连珠** - 率先在横、竖、斜任一方向连成五子者获胜
+4. **棋盘满平** - 如果棋盘下满且无人获胜则为平局
+
+## 技术栈
+
+- **框架**: Next.js 15 (App Router)
+- **语言**: TypeScript
+- **样式**: Tailwind CSS
+- **组件库**: shadcn/ui
+- **状态管理**: React Hooks
+
+## 开始游戏
+
+1. 克隆项目到本地
+2. 安装依赖: `npm install`
+3. 启动开发服务器: `npm run dev`
+4. 在浏览器中打开 `http://localhost:3000`
+
+## 游戏操作
+
+- **下棋**: 点击棋盘上的空白位置放置棋子
+- **悔棋**: 点击"悔棋"按钮撤销上一步操作
+- **重新开始**: 点击"重新开始"按钮开始新游戏
+- **查看状态**: 右侧面板显示当前玩家、步数等信息
+
+## 文件结构
+
+```
+src/
+├── app/
+│   ├── globals.css          # 全局样式
+│   ├── layout.tsx          # 应用布局
+│   └── page.tsx            # 主页面
+├── components/
+│   ├── ui/                 # shadcn/ui 组件
+│   ├── GameBoard.tsx       # 游戏棋盘组件
+│   └── GameControls.tsx    # 游戏控制面板
+├── hooks/
+│   └── useGame.ts          # 游戏状态管理 Hook
+├── lib/
+│   ├── utils.ts            # 工具函数
+│   └── gameLogic.ts        # 游戏逻辑
+└── types/
+    └── game.ts             # 游戏类型定义
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 核心功能
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 游戏逻辑
+- 棋盘状态管理
+- 胜负判断算法
+- 移动历史记录
+- 合法移动检查
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 用户界面
+- 响应式棋盘布局
+- 优雅的棋子动画
+- 获胜高亮显示
+- 直观的游戏状态
 
-## Learn More
+### 交互体验
+- 鼠标悬停预览
+- 点击反馈动画
+- 键盘快捷键支持
+- 移动端适配
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+祝您游戏愉快！🎮
