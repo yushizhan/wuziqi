@@ -6,7 +6,14 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
   images: {
     unoptimized: true
-  }
+  },
+  allowedDevOrigins: [
+    'local-origin.dev', 
+    '*.local-origin.dev',
+    '10.62.64.8',
+    'localhost',
+    '127.0.0.1'
+  ]
 };
 
 export default nextConfig;
