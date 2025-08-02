@@ -107,8 +107,8 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
           {/* Current Room Info */}
           {roomId && (
             <div className="p-3 bg-green-50 rounded-lg">
-              <div className="text-xs text-gray-600 mb-1">当前房间:</div>
-              <div className="text-sm font-mono break-all bg-white p-2 rounded border mb-2">
+              <div className="text-xs text-gray-600 mb-1">房间号:</div>
+              <div className="text-2xl font-mono font-bold text-center bg-white p-3 rounded border mb-2 tracking-wider">
                 {roomId}
               </div>
               <div className="flex items-center justify-between">
@@ -135,7 +135,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                   创建房间
                 </Button>
                 <p className="text-xs text-gray-500 text-center">
-                  创建房间后，分享您的ID给朋友加入
+                  创建房间后，分享6位房间号给朋友加入
                 </p>
               </div>
 
@@ -150,22 +150,27 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="输入房间ID"
+                    placeholder="输入6位房间号"
                     value={inputRoomId}
-                    onChange={(e) => setInputRoomId(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onChange={(e) => {
+                      // Only allow 6 digits
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                      setInputRoomId(value);
+                    }}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-lg font-mono text-center tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-500"
                     onKeyPress={(e) => e.key === 'Enter' && handleJoinRoom()}
+                    maxLength={6}
                   />
                   <Button 
                     onClick={handleJoinRoom} 
-                    disabled={!inputRoomId.trim()}
+                    disabled={inputRoomId.length !== 6}
                     variant="outline"
                   >
                     加入
                   </Button>
                 </div>
                 <p className="text-xs text-gray-500 text-center">
-                  输入朋友分享的房间ID
+                  输入朋友分享的6位房间号
                 </p>
               </div>
             </>

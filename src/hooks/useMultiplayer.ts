@@ -17,22 +17,36 @@ export function useMultiplayer({ onMessage, onConnectionChange }: UseMultiplayer
   const [connection, setConnection] = useState<DataConnection | null>(null);
   const [peerId, setPeerId] = useState<string>('');
   const [roomId, setRoomId] = useState<string>('');
+  const [displayRoomId, setDisplayRoomId] = useState<string>(''); // 6-digit room number for display
   const [isHost, setIsHost] = useState<boolean>(false);
   const [playerRole, setPlayerRole] = useState<Player | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
 
   const connectionRef = useRef<DataConnection | null>(null);
+  const roomMappingRef = useRef<Map<string, string>>(new Map()); // Map 6-digit ID to actual peer ID
+  
+  // Generate 6-digit room number
+  const generateRoomNumber = useCallback((): string => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }, []);
 
-  // Initialize PeerJS
-  const initializePeer = useCallback(() => {
-    const newPeer = new Peer({
+  // Initialize PeerJS with custom ID for room creation
+  const initializePeer = useCallback((customId?: string) => {
+    const peerOptions: any = {
       config: {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
           { urls: 'stun:stun1.l.google.com:19302' }
         ]
       }
-    });
+    };
+    
+    // If creating a room, use room number as peer ID
+    if (customId) {
+      peerOptions.id = `room-${customId}`;
+    }
+    
+    const newPeer = new Peer(peerOptions);
 
     newPeer.on('open', (id) => {
       console.log('My peer ID is: ' + id);
@@ -68,11 +82,24 @@ export function useMultiplayer({ onMessage, onConnectionChange }: UseMultiplayer
       onConnectionChange('connected');
       setIsHost(false); // Guest
       setPlayerRole('white'); // Host is black, guest is white
+      
+      // Send room info to guest
+      const roomNumber = displayRoomId || generateRoomNumber();
+      if (!displayRoomId) {
+        setDisplayRoomId(roomNumber);
+      }
     });
 
     conn.on('data', (data) => {
       console.log('Received data:', data);
-      onMessage(data as GameMessage);
+      const message = data as GameMessage;
+      
+      // Handle room info message
+      if (message.type === 'roomInfo') {
+        setDisplayRoomId(message.data.roomNumber);
+      } else {
+        onMessage(message);
+      }
     });
 
     conn.on('close', () => {
@@ -88,34 +115,60 @@ export function useMultiplayer({ onMessage, onConnectionChange }: UseMultiplayer
       setConnectionStatus('error');
       onConnectionChange('error');
     });
-  }, [onMessage, onConnectionChange]);
+  }, [onMessage, onConnectionChange, displayRoomId, generateRoomNumber]);
 
   // Connect to a room (join as guest)
-  const joinRoom = useCallback((targetRoomId: string) => {
+  const joinRoom = useCallback((roomNumber: string) => {
     if (!peer) {
       console.error('Peer not initialized');
       return false;
     }
 
-    setRoomId(targetRoomId);
+    // Validate 6-digit room number
+    if (!/^\d{6}$/.test(roomNumber)) {
+      console.error('Invalid room number format. Must be 6 digits.');
+      setConnectionStatus('error');
+      onConnectionChange('error');
+      return false;
+    }
+
+    const targetPeerId = `room-${roomNumber}`;
+    setRoomId(targetPeerId);
+    setDisplayRoomId(roomNumber);
     setConnectionStatus('connecting');
     onConnectionChange('connecting');
 
-    const conn = peer.connect(targetRoomId);
+    const conn = peer.connect(targetPeerId);
     
     conn.on('open', () => {
-      console.log('Connected to room:', targetRoomId);
+      console.log('Connected to room:', roomNumber);
       setConnection(conn);
       connectionRef.current = conn;
       setConnectionStatus('connected');
       onConnectionChange('connected');
       setIsHost(false);
       setPlayerRole('white');
+      
+      // Send room info confirmation
+      const roomInfoMessage: GameMessage = {
+        type: 'roomInfo',
+        data: { roomNumber },
+        timestamp: Date.now(),
+        playerId: 'guest'
+      };
+      conn.send(roomInfoMessage);
     });
 
     conn.on('data', (data) => {
       console.log('Received data:', data);
-      onMessage(data as GameMessage);
+      const message = data as GameMessage;
+      
+      // Handle room info message
+      if (message.type === 'roomInfo') {
+        setDisplayRoomId(message.data.roomNumber);
+      } else {
+        onMessage(message);
+      }
     });
 
     conn.on('close', () => {
@@ -137,17 +190,53 @@ export function useMultiplayer({ onMessage, onConnectionChange }: UseMultiplayer
 
   // Create a room (become host)
   const createRoom = useCallback(() => {
-    if (!peerId) {
-      console.error('Peer ID not available');
-      return null;
+    // Generate a new 6-digit room number
+    const roomNumber = generateRoomNumber();
+    setDisplayRoomId(roomNumber);
+    
+    // Destroy existing peer if any
+    if (peer) {
+      peer.destroy();
     }
+    
+    // Create new peer with room number as ID
+    const newPeer = initializePeer(roomNumber);
+    
+    // Wait for peer to be ready
+    newPeer.on('open', (id) => {
+      console.log('Room created with ID:', id, 'Room number:', roomNumber);
+      setPeerId(id);
+      setRoomId(id);
+      setIsHost(true);
+      setPlayerRole('black'); // Host is always black (goes first)
+      setConnectionStatus('disconnected'); // Waiting for guest
+    });
+    
+    newPeer.on('connection', (conn) => {
+      console.log('Guest joining room:', roomNumber);
+      acceptConnection(conn);
+      
+      // Send room info to guest
+      conn.on('open', () => {
+        const roomInfoMessage: GameMessage = {
+          type: 'roomInfo',
+          data: { roomNumber },
+          timestamp: Date.now(),
+          playerId: 'host'
+        };
+        conn.send(roomInfoMessage);
+      });
+    });
 
-    setRoomId(peerId);
-    setIsHost(true);
-    setPlayerRole('black'); // Host is always black (goes first)
-    setConnectionStatus('disconnected'); // Waiting for guest
-    return peerId;
-  }, [peerId]);
+    newPeer.on('error', (err) => {
+      console.error('Room creation error:', err);
+      setConnectionStatus('error');
+      onConnectionChange('error');
+    });
+    
+    setPeer(newPeer);
+    return roomNumber; // Return the 6-digit room number
+  }, [peer, generateRoomNumber, initializePeer, acceptConnection, onConnectionChange]);
 
   // Send message to opponent
   const sendMessage = useCallback((message: GameMessage) => {
@@ -166,14 +255,26 @@ export function useMultiplayer({ onMessage, onConnectionChange }: UseMultiplayer
     if (connectionRef.current) {
       connectionRef.current.close();
     }
+    if (peer) {
+      peer.destroy();
+    }
     setConnection(null);
     connectionRef.current = null;
     setConnectionStatus('disconnected');
     onConnectionChange('disconnected');
     setRoomId('');
+    setDisplayRoomId('');
     setIsHost(false);
     setPlayerRole(null);
-  }, [onConnectionChange]);
+    setPeer(null);
+    setPeerId('');
+    
+    // Reinitialize peer for future connections
+    setTimeout(() => {
+      const newPeer = initializePeer();
+      setPeer(newPeer);
+    }, 1000);
+  }, [onConnectionChange, peer, initializePeer]);
 
   // Initialize peer on mount
   useEffect(() => {
@@ -188,7 +289,7 @@ export function useMultiplayer({ onMessage, onConnectionChange }: UseMultiplayer
   return {
     peer,
     peerId,
-    roomId,
+    roomId: displayRoomId, // Return the 6-digit room number instead of full peer ID
     isHost,
     playerRole,
     connectionStatus,

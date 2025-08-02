@@ -140,8 +140,8 @@ export default function MultiplayerPage() {
               {/* Room Info */}
               <div className="text-sm space-y-2 mb-4">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">房间:</span>
-                  <span className="font-mono text-xs">{roomId.substring(0, 8)}...</span>
+                  <span className="text-gray-600">房间号:</span>
+                  <span className="font-mono text-lg font-bold">{roomId}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">身份:</span>

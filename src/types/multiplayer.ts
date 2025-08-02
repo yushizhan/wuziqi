@@ -20,7 +20,7 @@ export interface MultiplayerGameState extends GameState {
 }
 
 export interface GameMessage {
-  type: 'move' | 'restart' | 'undo' | 'chat' | 'gameState';
+  type: 'move' | 'restart' | 'undo' | 'chat' | 'gameState' | 'roomInfo';
   data: any;
   timestamp: number;
   playerId: string;
@@ -50,4 +50,11 @@ export interface RestartMessage extends GameMessage {
 export interface UndoMessage extends GameMessage {
   type: 'undo';
   data: {};
+}
+
+export interface RoomInfoMessage extends GameMessage {
+  type: 'roomInfo';
+  data: {
+    roomNumber: string;
+  };
 }
