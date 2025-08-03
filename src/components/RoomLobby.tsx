@@ -14,6 +14,10 @@ interface RoomLobbyProps {
   isHost: boolean;
   playerRole: 'black' | 'white' | null;
   connectionStatus: 'disconnected' | 'connecting' | 'connected' | 'error';
+  hostReady?: boolean;
+  guestReady?: boolean;
+  lastError?: string;
+  retryCount?: number;
   onCreateRoom: () => void;
   onJoinRoom: (roomId: string) => void;
   onStartGame: () => void;
@@ -26,6 +30,10 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
   isHost,
   playerRole,
   connectionStatus,
+  hostReady = false,
+  guestReady = false,
+  lastError,
+  retryCount = 0,
   onCreateRoom,
   onJoinRoom,
   onStartGame,
@@ -36,6 +44,25 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
   const handleJoinRoom = () => {
     if (inputRoomId.trim()) {
       onJoinRoom(inputRoomId.trim());
+    }
+  };
+
+  const handleRetry = () => {
+    onDisconnect();
+    setInputRoomId('');
+  };
+
+  const getErrorMessage = () => {
+    if (connectionStatus !== 'error') return '';
+    
+    if (lastError?.includes('peer-unavailable') || lastError?.includes('Could not connect')) {
+      return '房间不存在或房主已离开';
+    } else if (lastError?.includes('network')) {
+      return '网络连接问题';
+    } else if (lastError?.includes('timeout')) {
+      return '连接超时，房间可能不存在';
+    } else {
+      return '连接失败，请重试';
     }
   };
 
@@ -127,11 +154,26 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
             </div>
           )}
 
-          {connectionStatus === 'disconnected' && !roomId && (
+          {!roomId && (
             <>
+              {connectionStatus !== 'connected' && (
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
+                  <div className="text-yellow-600 text-sm">
+                    {connectionStatus === 'connecting' && '正在连接服务器...'}
+                    {connectionStatus === 'disconnected' && '服务器连接断开'}
+                    {connectionStatus === 'error' && '服务器连接失败'}
+                  </div>
+                </div>
+              )}
+              
               {/* Create Room */}
               <div className="space-y-2">
-                <Button onClick={onCreateRoom} className="w-full" variant="default">
+                <Button 
+                  onClick={onCreateRoom} 
+                  className="w-full" 
+                  variant="default"
+                  disabled={connectionStatus !== 'connected'}
+                >
                   创建房间
                 </Button>
                 <p className="text-xs text-gray-500 text-center">
@@ -163,7 +205,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                   />
                   <Button 
                     onClick={handleJoinRoom} 
-                    disabled={inputRoomId.length !== 6}
+                    disabled={inputRoomId.length !== 6 || connectionStatus !== 'connected'}
                     variant="outline"
                   >
                     加入
@@ -185,36 +227,91 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
 
           {connectionStatus === 'connected' && isHost && (
             <div className="space-y-2">
-              <Button onClick={onStartGame} className="w-full" variant="default">
-                开始游戏
-              </Button>
-              <p className="text-xs text-gray-500 text-center">
-                等待对方准备，点击开始游戏
-              </p>
+              {guestReady && (
+                <div className="p-2 bg-green-50 border border-green-200 rounded-lg text-center">
+                  <span className="text-green-600 text-sm">✅ 对方已准备就绪</span>
+                </div>
+              )}
+              {hostReady ? (
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                  <span className="text-blue-600 font-medium">✅ 已准备就绪</span>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {guestReady ? '双方已准备，等待游戏开始...' : '等待客人准备...'}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <Button onClick={onStartGame} className="w-full" variant="default">
+                    准备就绪
+                  </Button>
+                  <p className="text-xs text-gray-500 text-center">
+                    点击准备就绪，等待客人加入并准备
+                  </p>
+                </>
+              )}
             </div>
           )}
 
           {connectionStatus === 'connected' && !isHost && (
             <div className="space-y-2">
-              <Button onClick={onStartGame} className="w-full" variant="default">
-                准备就绪
-              </Button>
-              <p className="text-xs text-gray-500 text-center">
-                已连接到房间，等待房主开始游戏
-              </p>
+              {hostReady && (
+                <div className="p-2 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                  <span className="text-blue-600 text-sm">✅ 房主已准备就绪</span>
+                </div>
+              )}
+              {guestReady ? (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-center">
+                  <span className="text-green-600 font-medium">✅ 已准备就绪</span>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {hostReady ? '双方已准备，等待游戏开始...' : '等待房主准备...'}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <Button onClick={onStartGame} className="w-full" variant="default">
+                    准备就绪
+                  </Button>
+                  <p className="text-xs text-gray-500 text-center">
+                    已连接到房间，点击准备就绪
+                  </p>
+                </>
+              )}
             </div>
           )}
 
           {connectionStatus === 'error' && (
-            <div className="space-y-2">
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600 text-center">
-                  连接失败，请检查房间ID或网络连接
-                </p>
+            <div className="space-y-3">
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center mb-2">
+                  <div className="w-4 h-4 bg-red-500 rounded-full mr-2"></div>
+                  <p className="text-sm text-red-600 font-medium">
+                    {getErrorMessage()}
+                  </p>
+                </div>
+                {retryCount > 0 && (
+                  <p className="text-xs text-red-500 mb-2">
+                    已尝试 {retryCount} 次
+                  </p>
+                )}
+                <div className="text-xs text-red-500 space-y-1">
+                  <p>• 请确认房间号正确（6位数字）</p>
+                  <p>• 确保房主已创建房间并在线</p>
+                  <p>• 检查网络连接状态</p>
+                  {retryCount >= 3 && (
+                    <p className="font-medium">• 建议尝试创建新房间</p>
+                  )}
+                </div>
               </div>
-              <Button onClick={onDisconnect} className="w-full" variant="outline">
-                重新开始
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={handleRetry} className="flex-1" variant="outline">
+                  重新开始
+                </Button>
+                {retryCount < 3 && inputRoomId && (
+                  <Button onClick={handleJoinRoom} className="flex-1" variant="default">
+                    重试连接
+                  </Button>
+                )}
+              </div>
             </div>
           )}
 

@@ -4,23 +4,25 @@ import { GameState, Move, Player } from './game';
 
 export interface Room {
   id: string;
-  players: Player[];
   host: string;
   guest?: string;
-  status: 'waiting' | 'playing' | 'finished';
+  hostReady: boolean;
+  guestReady: boolean;
+  gameStarted: boolean;
+  createdAt: number;
 }
 
 export interface MultiplayerGameState extends GameState {
   roomId: string;
   isMultiplayer: boolean;
   playerRole: Player | null; // Which color this player is playing
-  opponent?: string; // Opponent's peer ID
+  opponent?: string; // Opponent's socket ID
   isHost: boolean;
   connectionStatus: 'disconnected' | 'connecting' | 'connected' | 'error';
 }
 
 export interface GameMessage {
-  type: 'move' | 'restart' | 'undo' | 'chat' | 'gameState' | 'roomInfo';
+  type: 'move' | 'restart' | 'undo' | 'chat' | 'gameState' | 'roomInfo' | 'startGame' | 'playerReady';
   data: any;
   timestamp: number;
   playerId: string;
@@ -57,4 +59,33 @@ export interface RoomInfoMessage extends GameMessage {
   data: {
     roomNumber: string;
   };
+}
+
+export interface StartGameMessage extends GameMessage {
+  type: 'startGame';
+  data: {};
+}
+
+export interface PlayerReadyMessage extends GameMessage {
+  type: 'playerReady';
+  data: {};
+}
+
+// Socket.IO specific types
+export interface SocketResponse {
+  success: boolean;
+  roomId?: string;
+  isHost?: boolean;
+  playerRole?: Player;
+  error?: string;
+}
+
+export interface PlayerJoinedEvent {
+  guestId: string;
+  roomId: string;
+}
+
+export interface PlayerReadyUpdateEvent {
+  hostReady: boolean;
+  guestReady: boolean;
 }

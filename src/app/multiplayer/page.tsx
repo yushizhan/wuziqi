@@ -2,25 +2,31 @@
 
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import RoomLobby from '@/components/RoomLobby';
 import GameBoard from '@/components/GameBoard';
 import GameControls from '@/components/GameControls';
-import { useMultiplayer } from '@/hooks/useMultiplayer';
+import { useSocketIO } from '@/hooks/useSocketIO';
 import { useMultiplayerGame } from '@/hooks/useMultiplayerGame';
-import { GameMessage } from '@/types/multiplayer';
+import { GameMessage, StartGameMessage, PlayerReadyMessage } from '@/types/multiplayer';
 import { Button } from '@/components/ui/button';
 
 export default function MultiplayerPage() {
   const [gameStarted, setGameStarted] = useState(false);
 
+  // Create a ref to store the handleOpponentMessage function
+  const handleOpponentMessageRef = useRef<((message: GameMessage) => void) | null>(null);
+
   // Handle incoming P2P messages
   const handleMessage = useCallback((message: GameMessage) => {
     console.log('Received message:', message);
-    if (message.type === 'gameState' && message.data.started) {
+    if (message.type === 'startGame') {
       setGameStarted(true);
     }
-    handleOpponentMessage(message);
+    // Call the opponent message handler if available
+    if (handleOpponentMessageRef.current) {
+      handleOpponentMessageRef.current(message);
+    }
   }, []);
 
   // Handle connection status changes
@@ -30,19 +36,26 @@ export default function MultiplayerPage() {
     }
   }, []);
 
-  // Initialize multiplayer connection
+  // Initialize Socket.IO connection
   const {
-    peerId,
+    socketId,
     roomId,
     isHost,
     playerRole,
     connectionStatus,
+    lastError,
+    retryCount,
+    hostReady,
+    guestReady,
     isConnected,
+    isRoomReady,
+    areBothPlayersReady,
     createRoom,
     joinRoom,
     sendMessage,
+    sendPlayerReady,
     disconnect
-  } = useMultiplayer({
+  } = useSocketIO({
     onMessage: handleMessage,
     onConnectionChange: handleConnectionChange
   });
@@ -60,8 +73,14 @@ export default function MultiplayerPage() {
     isMultiplayer: true,
     playerRole,
     isHost,
-    onSendMessage: sendMessage
+    onSendMessage: sendMessage,
+    onGameStart: () => setGameStarted(true)
   });
+
+  // Update the ref when handleOpponentMessage changes
+  useEffect(() => {
+    handleOpponentMessageRef.current = handleOpponentMessage;
+  }, [handleOpponentMessage]);
 
   const handleCreateRoom = useCallback(() => {
     const newRoomId = createRoom();
@@ -78,16 +97,9 @@ export default function MultiplayerPage() {
   }, [joinRoom]);
 
   const handleStartGame = useCallback(() => {
-    setGameStarted(true);
-    // Notify opponent that game has started
-    const startMessage: GameMessage = {
-      type: 'gameState',
-      data: { started: true },
-      timestamp: Date.now(),
-      playerId: 'self'
-    };
-    sendMessage(startMessage);
-  }, [sendMessage]);
+    // Send player ready signal to server
+    sendPlayerReady();
+  }, [sendPlayerReady]);
 
   const handleDisconnect = useCallback(() => {
     disconnect();
@@ -102,11 +114,15 @@ export default function MultiplayerPage() {
   if (!isConnected || !gameStarted) {
     return (
       <RoomLobby
-        peerId={peerId}
+        peerId={socketId}
         roomId={roomId}
         isHost={isHost}
         playerRole={playerRole}
         connectionStatus={connectionStatus}
+        hostReady={hostReady}
+        guestReady={guestReady}
+        lastError={lastError}
+        retryCount={retryCount}
         onCreateRoom={handleCreateRoom}
         onJoinRoom={handleJoinRoom}
         onStartGame={handleStartGame}

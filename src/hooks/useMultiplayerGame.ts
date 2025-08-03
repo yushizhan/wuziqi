@@ -4,7 +4,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { GameState, Player, Move, Position } from '@/types/game';
-import { GameMessage, MoveMessage, RestartMessage, UndoMessage } from '@/types/multiplayer';
+import { GameMessage, MoveMessage, RestartMessage, UndoMessage, StartGameMessage, PlayerReadyMessage } from '@/types/multiplayer';
 import {
   createEmptyBoard,
   placePiece,
@@ -20,13 +20,15 @@ interface UseMultiplayerGameProps {
   playerRole: Player | null;
   isHost: boolean;
   onSendMessage?: (message: GameMessage) => boolean;
+  onGameStart?: () => void;
 }
 
 export function useMultiplayerGame({ 
   isMultiplayer, 
   playerRole, 
   isHost,
-  onSendMessage 
+  onSendMessage,
+  onGameStart
 }: UseMultiplayerGameProps) {
   const [gameState, setGameState] = useState<GameState>(() => ({
     board: createEmptyBoard(),
@@ -118,8 +120,21 @@ export function useMultiplayerGame({
           setWinningPositions([]);
         }
         break;
+
+      case 'startGame':
+        // Handle game start message
+        console.log('Game started by opponent');
+        if (onGameStart) {
+          onGameStart();
+        }
+        break;
+
+      case 'playerReady':
+        // Handle player ready message
+        console.log('Opponent is ready');
+        break;
     }
-  }, [gameState.board, gameState.moveHistory]);
+  }, [gameState.board, gameState.moveHistory, onGameStart]);
 
   // Make a move on the board
   const makeMove = useCallback((row: number, col: number): boolean => {
