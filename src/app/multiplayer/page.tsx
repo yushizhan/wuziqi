@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import RoomLobby from '@/components/RoomLobby';
 import GameBoard from '@/components/GameBoard';
 import GameControls from '@/components/GameControls';
@@ -13,9 +13,7 @@ import { Button } from '@/components/ui/button';
 
 export default function MultiplayerPage() {
   const [gameStarted, setGameStarted] = useState(false);
-
-  // Create a ref to store the handleOpponentMessage function
-  const handleOpponentMessageRef = useRef<((message: GameMessage) => void) | null>(null);
+  const [opponentMessageHandler, setOpponentMessageHandler] = useState<((message: GameMessage) => void) | null>(null);
 
   // Handle incoming P2P messages
   const handleMessage = useCallback((message: GameMessage) => {
@@ -24,10 +22,10 @@ export default function MultiplayerPage() {
       setGameStarted(true);
     }
     // Call the opponent message handler if available
-    if (handleOpponentMessageRef.current) {
-      handleOpponentMessageRef.current(message);
+    if (opponentMessageHandler) {
+      opponentMessageHandler(message);
     }
-  }, []);
+  }, [opponentMessageHandler]);
 
   // Handle connection status changes
   const handleConnectionChange = useCallback((status: 'disconnected' | 'connecting' | 'connected' | 'error') => {
@@ -77,16 +75,14 @@ export default function MultiplayerPage() {
     onGameStart: () => setGameStarted(true)
   });
 
-  // Update the ref when handleOpponentMessage changes
+  // Update the handler when handleOpponentMessage changes
   useEffect(() => {
-    handleOpponentMessageRef.current = handleOpponentMessage;
+    setOpponentMessageHandler(() => handleOpponentMessage);
   }, [handleOpponentMessage]);
 
   const handleCreateRoom = useCallback(() => {
-    const newRoomId = createRoom();
-    if (newRoomId) {
-      console.log('Room created:', newRoomId);
-    }
+    createRoom();
+    console.log('Creating room...');
   }, [createRoom]);
 
   const handleJoinRoom = useCallback((targetRoomId: string) => {

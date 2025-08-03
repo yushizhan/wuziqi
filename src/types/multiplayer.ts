@@ -26,6 +26,7 @@ export interface GameMessage {
   data: any;
   timestamp: number;
   playerId: string;
+  senderId?: string; // Added by server when forwarding messages
 }
 
 export interface MoveMessage extends GameMessage {
