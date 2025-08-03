@@ -26,6 +26,14 @@ export function useSocketIO({ onMessage, onConnectionChange }: UseSocketIOProps)
 
   const socketRef = useRef<Socket | null>(null);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const onConnectionChangeRef = useRef(onConnectionChange);
+  const onMessageRef = useRef(onMessage);
+
+  // Update refs when props change
+  useEffect(() => {
+    onConnectionChangeRef.current = onConnectionChange;
+    onMessageRef.current = onMessage;
+  }, [onConnectionChange, onMessage]);
 
   // Initialize Socket.IO connection
   const initializeSocket = useCallback(() => {
@@ -33,21 +41,22 @@ export function useSocketIO({ onMessage, onConnectionChange }: UseSocketIOProps)
       return socketRef.current;
     }
 
-    const newSocket = io(process.env.NODE_ENV === 'production' 
-      ? window.location.origin 
-      : `http://localhost:${window.location.port || '3001'}`, {
+    const newSocket = io({
       autoConnect: true,
       reconnection: true,
-      reconnectionAttempts: 3,
-      reconnectionDelay: 2000,
-      timeout: 10000
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      maxReconnectionAttempts: 5,
+      timeout: 20000,
+      forceNew: false
     });
 
     newSocket.on('connect', () => {
       console.log('Socket.IO connected:', newSocket.id);
       setSocketId(newSocket.id || '');
       setConnectionStatus('connected');
-      onConnectionChange('connected');
+      onConnectionChangeRef.current('connected');
       setLastError('');
       setRetryCount(0);
     });
@@ -55,22 +64,45 @@ export function useSocketIO({ onMessage, onConnectionChange }: UseSocketIOProps)
     newSocket.on('disconnect', (reason) => {
       console.log('Socket.IO disconnected:', reason);
       setConnectionStatus('disconnected');
-      onConnectionChange('disconnected');
+      onConnectionChangeRef.current('disconnected');
       setSocketId('');
     });
 
     newSocket.on('connect_error', (error) => {
       console.error('Socket.IO connection error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        description: error.description,
+        context: error.context,
+        type: error.type
+      });
       setLastError(`Connection failed: ${error.message}`);
       setConnectionStatus('error');
-      onConnectionChange('error');
+      onConnectionChangeRef.current('error');
+    });
+
+    newSocket.on('reconnect', (attemptNumber) => {
+      console.log('Socket.IO reconnected after', attemptNumber, 'attempts');
+      setConnectionStatus('connected');
+      onConnectionChangeRef.current('connected');
+      setLastError('');
+    });
+
+    newSocket.on('reconnect_attempt', (attemptNumber) => {
+      console.log('Socket.IO reconnection attempt', attemptNumber);
+      setConnectionStatus('connecting');
+      onConnectionChangeRef.current('connecting');
+    });
+
+    newSocket.on('reconnect_error', (error) => {
+      console.error('Socket.IO reconnection error:', error);
     });
 
     newSocket.on('reconnect_failed', () => {
-      console.error('Socket.IO reconnection failed');
+      console.error('Socket.IO reconnection failed after maximum attempts');
       setLastError('Unable to reconnect to the server. Please refresh the page and try again.');
       setConnectionStatus('error');
-      onConnectionChange('error');
+      onConnectionChangeRef.current('error');
     });
 
     // Game event listeners
@@ -97,14 +129,14 @@ export function useSocketIO({ onMessage, onConnectionChange }: UseSocketIOProps)
 
     newSocket.on('game-message', (message: GameMessage) => {
       console.log('Received game message:', message.type, message.data, 'from sender:', message.senderId);
-      onMessage(message);
+      onMessageRef.current(message);
     });
 
     newSocket.on('host-disconnected', () => {
       console.log('Host disconnected');
       setLastError('The host has disconnected. Please create a new room or join another one.');
       setConnectionStatus('error');
-      onConnectionChange('error');
+      onConnectionChangeRef.current('error');
       handleDisconnect();
     });
 
@@ -117,7 +149,7 @@ export function useSocketIO({ onMessage, onConnectionChange }: UseSocketIOProps)
     socketRef.current = newSocket;
     setSocket(newSocket);
     return newSocket;
-  }, [onMessage, onConnectionChange]);
+  }, []); // No dependencies needed since we use refs
 
   // Create room
   const createRoom = useCallback(() => {
@@ -127,7 +159,7 @@ export function useSocketIO({ onMessage, onConnectionChange }: UseSocketIOProps)
     }
 
     setConnectionStatus('connecting');
-    onConnectionChange('connecting');
+    onConnectionChangeRef.current('connecting');
 
     socketRef.current.emit('create-room', (response: SocketResponse) => {
       if (response.success && response.roomId) {
@@ -138,16 +170,16 @@ export function useSocketIO({ onMessage, onConnectionChange }: UseSocketIOProps)
         setHostReady(false);
         setGuestReady(false);
         setConnectionStatus('connected');
-        onConnectionChange('connected');
+        onConnectionChangeRef.current('connected');
         setLastError('');
       } else {
         console.error('Failed to create room:', response.error);
         setLastError(response.error || 'Failed to create room');
         setConnectionStatus('error');
-        onConnectionChange('error');
+        onConnectionChangeRef.current('error');
       }
     });
-  }, [onConnectionChange]);
+  }, []);
 
   // Join room with retry mechanism
   const joinRoom = useCallback((roomNumber: string, currentRetryCount: number = 0) => {
@@ -166,12 +198,12 @@ export function useSocketIO({ onMessage, onConnectionChange }: UseSocketIOProps)
     if (!/^\d{6}$/.test(roomNumber)) {
       setLastError('Invalid room number format. Must be 6 digits.');
       setConnectionStatus('error');
-      onConnectionChange('error');
+      onConnectionChangeRef.current('error');
       return false;
     }
 
     setConnectionStatus('connecting');
-    onConnectionChange('connecting');
+    onConnectionChangeRef.current('connecting');
     setRetryCount(currentRetryCount);
 
     socketRef.current.emit('join-room', roomNumber, (response: SocketResponse) => {
@@ -183,7 +215,7 @@ export function useSocketIO({ onMessage, onConnectionChange }: UseSocketIOProps)
         setHostReady(false);
         setGuestReady(false);
         setConnectionStatus('connected');
-        onConnectionChange('connected');
+        onConnectionChangeRef.current('connected');
         setLastError('');
         setRetryCount(0);
       } else {
@@ -200,13 +232,13 @@ export function useSocketIO({ onMessage, onConnectionChange }: UseSocketIOProps)
         } else {
           setLastError(response.error || 'Failed to join room');
           setConnectionStatus('error');
-          onConnectionChange('error');
+          onConnectionChangeRef.current('error');
         }
       }
     });
 
     return true;
-  }, [onConnectionChange]);
+  }, []);
 
   // Send player ready signal
   const sendPlayerReady = useCallback(() => {
@@ -277,13 +309,8 @@ export function useSocketIO({ onMessage, onConnectionChange }: UseSocketIOProps)
     setRetryCount(0);
     setLastError('');
     setConnectionStatus('disconnected');
-    onConnectionChange('disconnected');
-
-    // Reinitialize socket for future connections
-    setTimeout(() => {
-      initializeSocket();
-    }, 1000);
-  }, [roomId, onConnectionChange, initializeSocket]);
+    onConnectionChangeRef.current('disconnected');
+  }, [roomId]);
 
   // Initialize socket on mount
   useEffect(() => {
@@ -298,7 +325,7 @@ export function useSocketIO({ onMessage, onConnectionChange }: UseSocketIOProps)
         socketRef.current.disconnect();
       }
     };
-  }, [initializeSocket]);
+  }, []); // Empty dependency array - only run on mount
 
   return {
     socket,
