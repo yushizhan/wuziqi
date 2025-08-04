@@ -22,13 +22,14 @@ const GameBoard: React.FC<GameBoardProps> = ({
   gameOver,
   isWinningPosition
 }) => {
-  const cellSize = 'w-8 h-8';
-  const pieceSize = 'w-6 h-6';
+  // 响应式格子大小 - 移动端更大，桌面端适中
+  const cellSize = 'w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10';
+  const pieceSize = 'w-4 h-4 sm:w-6 sm:h-6 md:w-8 md:h-8';
 
   return (
-    <div className="inline-block p-4 bg-amber-100 rounded-lg shadow-lg">
+    <div className="inline-block p-2 sm:p-4 bg-amber-100 rounded-lg shadow-lg max-w-full overflow-hidden">
       <div 
-        className="grid gap-0 bg-amber-800 p-2 rounded"
+        className="grid gap-0 bg-amber-800 p-1 sm:p-2 rounded touch-manipulation"
         style={{ 
           gridTemplateColumns: `repeat(${BOARD_SIZE}, minmax(0, 1fr))`,
           gridTemplateRows: `repeat(${BOARD_SIZE}, minmax(0, 1fr))`
@@ -47,7 +48,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
                   'relative flex items-center justify-center',
                   'border border-amber-900',
                   'transition-all duration-200',
-                  !gameOver && isEmpty && 'hover:bg-amber-200 cursor-pointer',
+                  'touch-manipulation',
+                  !gameOver && isEmpty && 'hover:bg-amber-200 active:bg-amber-300 cursor-pointer',
                   gameOver && 'cursor-not-allowed'
                 )}
                 onClick={() => !gameOver && isEmpty && onCellClick(rowIndex, colIndex)}

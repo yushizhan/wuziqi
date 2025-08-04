@@ -22,50 +22,37 @@ export default function Home() {
   // Game mode selection menu
   if (gameMode === 'menu') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4 relative overflow-hidden">
+        {/* 谭氏棋牌背景 */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-6xl md:text-8xl lg:text-9xl font-bold text-amber-200/20 select-none rotate-12 transform scale-150">
+            谭氏棋牌
+          </div>
+        </div>
+        
+        <Card className="w-full max-w-md relative z-10 backdrop-blur-sm bg-white/90">
           <CardHeader>
-            <CardTitle className="text-center text-3xl font-bold">
-              五子棋 (Gomoku)
+            <CardTitle className="text-center text-3xl font-bold text-amber-800">
+              五子棋
             </CardTitle>
+            <p className="text-center text-amber-600 text-sm">谭氏棋牌</p>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-center text-gray-600 mb-6">
-              选择游戏模式
-            </div>
-
+          <CardContent className="space-y-6">
             {/* Single Player Mode */}
             <Button 
               onClick={() => setGameMode('single')} 
-              className="w-full h-12 text-lg" 
+              className="w-full h-14 text-lg bg-amber-600 hover:bg-amber-700 text-white" 
               variant="default"
             >
               🎯 单人游戏
             </Button>
-            <p className="text-xs text-gray-500 text-center -mt-2">
-              在本地进行游戏，支持悔棋功能
-            </p>
 
             {/* Multiplayer Mode */}
             <Link href="/multiplayer">
-              <Button className="w-full h-12 text-lg" variant="outline">
+              <Button className="w-full h-14 text-lg border-amber-600 text-amber-700 hover:bg-amber-50" variant="outline">
                 🌐 多人对战
               </Button>
             </Link>
-            <p className="text-xs text-gray-500 text-center -mt-2">
-              通过房间ID与朋友在线对战
-            </p>
-
-            {/* Game Rules */}
-            <div className="text-xs text-gray-500 bg-blue-50 p-4 rounded-lg mt-6">
-              <div className="font-semibold mb-2">游戏规则:</div>
-              <ul className="space-y-1">
-                <li>• 黑子先手，白子后手</li>
-                <li>• 横、竖、斜任意方向连成五子获胜</li>
-                <li>• 棋盘大小为 15×15</li>
-                <li>• 多人模式中房主执黑子</li>
-              </ul>
-            </div>
           </CardContent>
         </Card>
       </div>
@@ -74,8 +61,8 @@ export default function Home() {
 
   // Single player game
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4">
+      <div className="flex flex-col xl:flex-row gap-4 sm:gap-8 items-center xl:items-start max-w-7xl w-full">
         {/* Game Board */}
         <div className="flex-shrink-0">
           <GameBoard
@@ -88,7 +75,7 @@ export default function Home() {
         </div>
 
         {/* Game Controls */}
-        <div className="flex-shrink-0 w-full lg:w-auto">
+        <div className="flex-shrink-0 w-full max-w-sm xl:w-auto">
           <div className="space-y-4">
             {/* Mode Switch */}
             <div className="bg-white p-4 rounded-lg shadow-lg">

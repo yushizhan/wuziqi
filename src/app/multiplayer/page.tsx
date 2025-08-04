@@ -129,8 +129,8 @@ export default function MultiplayerPage() {
 
   // Show game interface
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4">
+      <div className="flex flex-col xl:flex-row gap-4 sm:gap-8 items-center xl:items-start max-w-7xl w-full">
         {/* Game Board */}
         <div className="flex-shrink-0">
           <GameBoard
@@ -143,7 +143,7 @@ export default function MultiplayerPage() {
         </div>
 
         {/* Game Controls */}
-        <div className="flex-shrink-0 w-full lg:w-auto">
+        <div className="flex-shrink-0 w-full max-w-sm xl:w-auto">
           <div className="space-y-4">
             {/* Multiplayer Game Controls */}
             <div className="bg-white p-4 rounded-lg shadow-lg">

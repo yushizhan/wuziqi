@@ -104,7 +104,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-center text-2xl font-bold">
@@ -121,15 +121,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
             </div>
           </div>
 
-          {/* Peer ID Display */}
-          {peerId && (
-            <div className="p-3 bg-blue-50 rounded-lg">
-              <div className="text-xs text-gray-600 mb-1">您的ID:</div>
-              <div className="text-sm font-mono break-all bg-white p-2 rounded border">
-                {peerId}
-              </div>
-            </div>
-          )}
+
 
           {/* Current Room Info */}
           {roomId && (
@@ -321,15 +313,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
             </Button>
           )}
 
-          {/* Instructions */}
-          <div className="text-xs text-gray-500 bg-blue-50 p-3 rounded-lg">
-            <div className="font-semibold mb-1">游戏说明:</div>
-            <ul className="space-y-1">
-              <li>• 房主执黑子先手</li>
-              <li>• 客人执白子后手</li>
-              <li>• 连续五子获胜</li>
-            </ul>
-          </div>
+
         </CardContent>
       </Card>
     </div>
