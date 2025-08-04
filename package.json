@@ -6,9 +6,9 @@
     "dev": "node scripts/start.js",
     "build": "next build",
     "export": "next build",
-    "start": "NODE_ENV=production node scripts/start.js",
+    "start": "cross-env NODE_ENV=production node scripts/start.js",
     "lint": "next lint",
-    "start:port": "PORT=3001 node server.js"
+    "start:port": "cross-env PORT=3001 node server.js"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.14",
@@ -28,6 +28,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^10.0.0",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.6",
     "typescript": "^5"

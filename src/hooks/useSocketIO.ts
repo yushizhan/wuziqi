@@ -47,7 +47,6 @@ export function useSocketIO({ onMessage, onConnectionChange }: UseSocketIOProps)
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
-      maxReconnectionAttempts: 5,
       timeout: 20000,
       forceNew: false
     });
@@ -72,9 +71,9 @@ export function useSocketIO({ onMessage, onConnectionChange }: UseSocketIOProps)
       console.error('Socket.IO connection error:', error);
       console.error('Error details:', {
         message: error.message,
-        description: error.description,
-        context: error.context,
-        type: error.type
+        description: (error as any).description,
+        context: (error as any).context,
+        type: (error as any).type
       });
       setLastError(`Connection failed: ${error.message}`);
       setConnectionStatus('error');

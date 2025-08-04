@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import RoomLobby from '@/components/RoomLobby';
 import GameBoard from '@/components/GameBoard';
 import GameControls from '@/components/GameControls';
@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 
 export default function MultiplayerPage() {
   const [gameStarted, setGameStarted] = useState(false);
-  const [opponentMessageHandler, setOpponentMessageHandler] = useState<((message: GameMessage) => void) | null>(null);
+  const opponentMessageHandlerRef = useRef<((message: GameMessage) => void) | null>(null);
 
   // Handle incoming P2P messages
   const handleMessage = useCallback((message: GameMessage) => {
@@ -22,10 +22,10 @@ export default function MultiplayerPage() {
       setGameStarted(true);
     }
     // Call the opponent message handler if available
-    if (opponentMessageHandler) {
-      opponentMessageHandler(message);
+    if (opponentMessageHandlerRef.current) {
+      opponentMessageHandlerRef.current(message);
     }
-  }, [opponentMessageHandler]);
+  }, []); // No dependencies needed since we use ref
 
   // Handle connection status changes
   const handleConnectionChange = useCallback((status: 'disconnected' | 'connecting' | 'connected' | 'error') => {
@@ -77,7 +77,7 @@ export default function MultiplayerPage() {
 
   // Update the handler when handleOpponentMessage changes
   useEffect(() => {
-    setOpponentMessageHandler(() => handleOpponentMessage);
+    opponentMessageHandlerRef.current = handleOpponentMessage;
   }, [handleOpponentMessage]);
 
   const handleCreateRoom = useCallback(() => {
