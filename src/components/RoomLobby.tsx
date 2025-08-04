@@ -3,6 +3,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -104,22 +105,33 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-cyan-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl font-bold">
-            五子棋 - 多人对战
-          </CardTitle>
+        <CardHeader className="relative">
+          {/* 右上角状态图标 */}
+          <div className="absolute top-4 right-4 flex items-center space-x-2">
+            <div className={cn('w-3 h-3 rounded-full', getStatusColor())} />
+            <Link href="/">
+              <Button variant="ghost" size="sm" className="p-1 h-8 w-8">
+                ←
+              </Button>
+            </Link>
+          </div>
+          
+          <div className="flex flex-col items-center space-y-4">
+            <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-amber-200 shadow-lg">
+              <img 
+                src="/avatar.jpg" 
+                alt="谭氏棋牌头像" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <CardTitle className="text-center text-2xl font-bold text-amber-800">
+              五子棋 - 多人对战
+            </CardTitle>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Connection Status */}
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <span className="text-sm text-gray-600">连接状态:</span>
-            <div className="flex items-center">
-              <div className={cn('w-3 h-3 rounded-full mr-2', getStatusColor())} />
-              <span className="text-sm font-medium">{getStatusText()}</span>
-            </div>
-          </div>
 
 
 
@@ -162,7 +174,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
               <div className="space-y-2">
                 <Button 
                   onClick={onCreateRoom} 
-                  className="w-full" 
+                  className="w-full h-12 text-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-300" 
                   variant="default"
                   disabled={connectionStatus !== 'connected'}
                 >
@@ -180,8 +192,8 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
               </div>
 
               {/* Join Room */}
-              <div className="space-y-2">
-                <div className="flex gap-2">
+              <div className="space-y-3">
+                <div className="flex gap-3">
                   <input
                     type="text"
                     placeholder="输入6位房间号"
@@ -191,7 +203,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                       const value = e.target.value.replace(/\D/g, '').slice(0, 6);
                       setInputRoomId(value);
                     }}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-lg font-mono text-center tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-3 py-2 border border-purple-200 rounded-md text-lg font-mono text-center tracking-wider focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-white/80 backdrop-blur-sm"
                     onKeyPress={(e) => e.key === 'Enter' && handleJoinRoom()}
                     maxLength={6}
                   />
@@ -199,13 +211,11 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                     onClick={handleJoinRoom} 
                     disabled={inputRoomId.length !== 6 || connectionStatus !== 'connected'}
                     variant="outline"
+                    className="px-6 border-2 border-cyan-400 text-cyan-600 hover:bg-cyan-50 shadow-lg hover:shadow-xl transition-all duration-300"
                   >
                     加入
                   </Button>
                 </div>
-                <p className="text-xs text-gray-500 text-center">
-                  输入朋友分享的6位房间号
-                </p>
               </div>
             </>
           )}

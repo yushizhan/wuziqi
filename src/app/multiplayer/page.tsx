@@ -129,7 +129,7 @@ export default function MultiplayerPage() {
 
   // Show game interface
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-cyan-50 flex items-center justify-center p-4">
       <div className="flex flex-col xl:flex-row gap-4 sm:gap-8 items-center xl:items-start max-w-7xl w-full">
         {/* Game Board */}
         <div className="flex-shrink-0">

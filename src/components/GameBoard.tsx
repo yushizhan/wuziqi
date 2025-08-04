@@ -27,14 +27,20 @@ const GameBoard: React.FC<GameBoardProps> = ({
   const pieceSize = 'w-4 h-4 sm:w-6 sm:h-6 md:w-8 md:h-8';
 
   return (
-    <div className="inline-block p-2 sm:p-4 bg-amber-100 rounded-lg shadow-lg max-w-full overflow-hidden">
-      <div 
-        className="grid gap-0 bg-amber-800 p-1 sm:p-2 rounded touch-manipulation"
-        style={{ 
-          gridTemplateColumns: `repeat(${BOARD_SIZE}, minmax(0, 1fr))`,
-          gridTemplateRows: `repeat(${BOARD_SIZE}, minmax(0, 1fr))`
-        }}
-      >
+    <div className="inline-block p-3 sm:p-6 max-w-full overflow-hidden">
+      {/* 外层科幻边框 */}
+      <div className="relative p-4 bg-gradient-to-br from-purple-100/80 to-pink-100/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30">
+        {/* 装饰性光晕 */}
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-200/20 via-purple-200/20 to-pink-200/20 rounded-3xl animate-pulse"></div>
+        
+        {/* 棋盘主体 */}
+        <div 
+          className="relative grid gap-0 bg-gradient-to-br from-indigo-50/90 to-purple-50/90 backdrop-blur-sm p-2 sm:p-3 rounded-2xl shadow-inner border border-white/50 touch-manipulation"
+          style={{ 
+            gridTemplateColumns: `repeat(${BOARD_SIZE}, minmax(0, 1fr))`,
+            gridTemplateRows: `repeat(${BOARD_SIZE}, minmax(0, 1fr))`
+          }}
+        >
         {board.map((row, rowIndex) =>
           row.map((cell, colIndex) => {
             const isWinning = isWinningPosition(rowIndex, colIndex);
@@ -46,33 +52,39 @@ const GameBoard: React.FC<GameBoardProps> = ({
                 className={cn(
                   cellSize,
                   'relative flex items-center justify-center',
-                  'border border-amber-900',
-                  'transition-all duration-200',
+                  'border border-slate-200/50',
+                  'transition-all duration-300 ease-out',
                   'touch-manipulation',
-                  !gameOver && isEmpty && 'hover:bg-amber-200 active:bg-amber-300 cursor-pointer',
+                  'backdrop-blur-sm',
+                  !gameOver && isEmpty && 'hover:bg-gradient-to-br hover:from-cyan-100/60 hover:to-purple-100/60 hover:shadow-lg hover:border-cyan-300/60 cursor-pointer transform hover:scale-105',
+                  !gameOver && isEmpty && 'active:bg-gradient-to-br active:from-purple-200/70 active:to-pink-200/70',
                   gameOver && 'cursor-not-allowed'
                 )}
                 onClick={() => !gameOver && isEmpty && onCellClick(rowIndex, colIndex)}
               >
-                <div className="absolute w-1 h-1 bg-amber-900 rounded-full" />
+                {/* 网格线交点 */}
+                <div className="absolute w-0.5 h-0.5 bg-slate-300/60 rounded-full" />
                 
+                {/* 星位 - 科幻风格 */}
                 {((rowIndex === 3 && colIndex === 3) ||
                   (rowIndex === 3 && colIndex === 11) ||
                   (rowIndex === 11 && colIndex === 3) ||
                   (rowIndex === 11 && colIndex === 11) ||
                   (rowIndex === 7 && colIndex === 7)) && (
-                  <div className="absolute w-2 h-2 bg-amber-900 rounded-full" />
+                  <div className="absolute w-1.5 h-1.5 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full shadow-lg animate-pulse" />
                 )}
                 
                 {cell && (
                   <div
                     className={cn(
                       pieceSize,
-                      'rounded-full border-2 transition-all duration-300',
+                      'rounded-full transition-all duration-500 ease-out transform',
+                      'shadow-2xl backdrop-blur-sm',
                       cell === 'black' 
-                        ? 'bg-gray-900 border-gray-700 shadow-md' 
-                        : 'bg-white border-gray-300 shadow-md',
-                      isWinning && 'ring-4 ring-yellow-400 ring-opacity-70 scale-110'
+                        ? 'bg-gradient-to-br from-slate-800 via-purple-900 to-indigo-900 border-2 border-purple-400/50 shadow-purple-500/30' 
+                        : 'bg-gradient-to-br from-white via-pink-50 to-cyan-50 border-2 border-pink-200/80 shadow-pink-300/40',
+                      isWinning && 'ring-4 ring-cyan-400 scale-125 animate-bounce shadow-cyan-400/50',
+                      !isWinning && 'hover:scale-105'
                     )}
                   />
                 )}
@@ -81,10 +93,11 @@ const GameBoard: React.FC<GameBoardProps> = ({
                   <div
                     className={cn(
                       pieceSize,
-                      'rounded-full opacity-0 hover:opacity-30 transition-opacity duration-200 absolute',
+                      'rounded-full opacity-0 hover:opacity-50 transition-all duration-300 absolute transform hover:scale-110',
+                      'shadow-xl backdrop-blur-sm',
                       currentPlayer === 'black' 
-                        ? 'bg-gray-900' 
-                        : 'bg-white border border-gray-300'
+                        ? 'bg-gradient-to-br from-slate-700/70 via-purple-800/70 to-indigo-800/70 border border-purple-400/40' 
+                        : 'bg-gradient-to-br from-white/80 via-pink-50/80 to-cyan-50/80 border border-pink-200/60'
                     )}
                   />
                 )}
@@ -92,6 +105,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
             );
           })
         )}
+        </div>
       </div>
     </div>
   );
